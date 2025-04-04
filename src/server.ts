@@ -29,7 +29,7 @@ app.post("/movies", async (req, res) => {
         });
         
         if(movieWithSameTitle){
-            return res.status(409).send({ message: "Já existe um filme com esse título" }
+            return res.status(409).send({ message: "Esse filme já foi cadastrado." }
         )};
 
         await prisma.movie.create({
