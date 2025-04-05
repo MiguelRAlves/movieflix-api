@@ -22,15 +22,16 @@ app.get("/movies", async (_, res) => {
 
 app.post("/movies", async (req, res) => {
     const { title, genre_id, language_id, oscar_count, release_date } = req.body;
-    try{
+    try {
 
         const movieWithSameTitle = await prisma.movie.findFirst({
             where: { title: { equals: title, mode: "insensitive" } },
         });
-        
-        if(movieWithSameTitle){
+
+        if (movieWithSameTitle) {
             return res.status(409).send({ message: "Esse filme já foi cadastrado." }
-        )};
+            )
+        };
 
         await prisma.movie.create({
             data: {
@@ -41,10 +42,10 @@ app.post("/movies", async (req, res) => {
                 release_date: new Date(release_date)
             }
         });
-    }catch(error){
+    } catch (error) {
         return res.status(500).send({ message: "Erro ao cadastrar filme" });
     }
-    res.status(201).send();
+    res.status(201).send("Filme cadastrado com sucesso!");
 });
 
 app.put("/movies/:id", async (req, res) => {
@@ -53,22 +54,38 @@ app.put("/movies/:id", async (req, res) => {
     const movie = await prisma.movie.findUnique({
         where: { id }
     });
-    if(!movie){
+    if (!movie) {
         return res.status(404).send({ message: "Filme não encontrado" });
     }
 
     const data = { ...req.body };
     data.release_date = data.release_date ? new Date(data.release_date) : undefined;
 
-    try{
+    try {
         await prisma.movie.update({
             where: { id },
             data: data
         });
-    }catch(error){
+    } catch (error) {
         return res.status(500).send({ message: "Erro ao atualizar filme" });
     }
     res.status(200).send("Filme atualizado com sucesso!");
+})
+
+app.delete("/movies/:id", async (req, res) => {
+    const id = Number(req.params.id)
+    try {
+        const movie = await prisma.movie.findUnique({ where: { id } })
+        if (!movie) {
+            return res.status(404).send("Filme não encontrado.")
+        }
+
+        await prisma.movie.delete({where: { id }})
+
+    }catch(error){
+        return res.status(500).send("Erro ao deletar filme.")
+    }
+    res.status(200).send("Filme deletado com sucesso!")
 })
 
 app.listen(port, () => {
