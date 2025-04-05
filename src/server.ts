@@ -80,13 +80,43 @@ app.delete("/movies/:id", async (req, res) => {
             return res.status(404).send("Filme não encontrado.")
         }
 
-        await prisma.movie.delete({where: { id }})
+        await prisma.movie.delete({ where: { id } })
 
-    }catch(error){
+    } catch (error) {
         return res.status(500).send("Erro ao deletar filme.")
     }
-    res.status(200).send("Filme deletado com sucesso!")
+    res.status(200).send({ message: "Filme deletado com sucesso!"})
 })
+
+app.get("/movies/:genreName", async (req, res) => {
+    const genre = req.params.genreName;
+
+    try {
+        const moviesFilteredByGenreName = await prisma.movie.findMany({
+            include: {
+                genres: true,
+                languages: true
+            },
+            where: {
+                genres: {
+                    name: {
+                        equals: genre,
+                        mode: "insensitive"
+                    }
+                }
+            }
+        });
+
+        if (moviesFilteredByGenreName.length === 0) {
+            return res.status(404).send("Nenhum filme encontrado com esse gênero.")
+        }
+
+        res.status(200).send(moviesFilteredByGenreName);
+
+    } catch (error) {
+        res.status(500).send({ message: "Erro ao buscar filmes."});
+    }
+});
 
 app.listen(port, () => {
     console.log(`Servidor em execução na porta ${port}`);
